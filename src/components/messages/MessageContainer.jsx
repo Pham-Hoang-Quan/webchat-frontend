@@ -39,7 +39,7 @@ const MessageContainer = ({ onBackClick }) => {
             {!selectedConversation && (
                 <Col
                     style={{
-                        backgroundImage: `url(./welcome.png)`,
+                        backgroundImage: `url(./public/welcome.png)`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         // backgroundColor: '#f2f8ca',

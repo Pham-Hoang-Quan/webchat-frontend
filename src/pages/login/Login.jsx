@@ -17,7 +17,7 @@ const Login = () => {
     };
     return (
         <div style={{
-            backgroundImage: `url(./public/bgLogin1.png)`,
+            backgroundImage: `url(./bgLogin1.png)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center'
           }} className="p-4 h-screen flex items-center justify-center">
