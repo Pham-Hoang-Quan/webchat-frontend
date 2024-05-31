@@ -9,39 +9,47 @@ import { IoSearchSharp } from "react-icons/io5";
 
 
 const Conversations = () => {
+	
 	// const { loading, conversations } = useGetConversations();
-	const [conversations, setConversations] = useState([]);
-	const { authUser } = useAuthContext();
+	// const [conversations, setConversations] = useState([]);
+	const { authUser, conversations, setConversations } = useAuthContext();
 	const [loading, setLoading] = useState([]);
 	const [search, setSearch] = useState("");
 	const [conversationsFiltered, setConversationsFiltered] = useState([]);
 
-	const getConversations = async () => {
-		setLoading(true);
-		try {
-			// const res = await fetch("/api/users"); // Lấy tất cả các user từ database
-			const res = await fetch(`${APIURL}/api/conversations/get/${authUser._id}`);
-			const data = await res.json();
-			console.log(data);
-			if (data.error) {
-				throw new Error(data.error);
-			}
-			setConversations(data);
-			setConversationsFiltered(data); // Cập nhật conversationsFiltered khi lấy dữ liệu ban đầu
-		} catch (error) {
-			toast.error(error.message);
-		} finally {
-			setLoading(false);
-		}
-	};
+	// const getConversations = async () => {
+	// 	setLoading(true);
+	// 	try {
+	// 		// const res = await fetch("/api/users"); // Lấy tất cả các user từ database
+	// 		const res = await fetch(`${APIURL}/api/conversations/get/${authUser._id}`);
+	// 		const data = await res.json();
+	// 		console.log(data);
+	// 		if (data.error) {
+	// 			throw new Error(data.error);
+	// 		}
+	// 		setConversations(data);
+	// 		setConversationsFiltered(data); // Cập nhật conversationsFiltered khi lấy dữ liệu ban đầu
+	// 	} catch (error) {
+	// 		toast.error(error.message);
+	// 	} finally {
+	// 		setLoading(false);
+	// 	}
+	// };
 
 	useEffect(() => {
 		console.log("authUser", authUser);
-		getConversations();
-	}, []);
+		// getConversations();
+		setConversationsFiltered(conversations);
+		if(conversations.length === 0){
+			setLoading(true);
+		} else {
+			setLoading(false);
+		}
+	}, [conversations]);
 
 	// Filter conversations based on search input
 	useEffect(() => {
+
 		const filteredConversations = conversations.filter(conversation =>
 			conversation.name.toLowerCase().includes(search.toLowerCase())
 		);
@@ -79,7 +87,9 @@ const Conversations = () => {
 					/>
 				))}
 				{loading ? <span className='loading loading-spinner mx-auto'></span> : null}
-				<BtnAddFriend getConversations={getConversations} ></BtnAddFriend>
+				<BtnAddFriend 
+				// getConversations={getConversations}
+				 ></BtnAddFriend>
 			</div>
 		</div>
 

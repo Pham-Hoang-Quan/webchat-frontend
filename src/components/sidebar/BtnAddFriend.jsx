@@ -8,17 +8,21 @@ import { useAuthContext } from '../../context/AuthContext';
 import useGetConversations from '../../hooks/useGetConversations';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import useConversation from '../../zustand/useConversation';
 
 const { Search } = Input;
 const { Meta } = Card;
-const BtnAddFriend = ({getConversations}) => {
+const BtnAddFriend = (
+    // {getConversations}
+) => {
     const [open, setOpen] = useState(false);
     const [placement, setPlacement] = useState('left');
     const [searchValue, setSearchValue] = useState(''); // Add this line
     const [foundUser, setFoundUser] = useState(null);
     const [loading, setLoading] = useState(false);
-    const { authUser } = useAuthContext();
+    const { authUser, setConversations } = useAuthContext();
     const navigate = useNavigate();
+    // const { setConversations } = useConversation();
 
     const [messageApi, contextHolder] = message.useMessage();
 
@@ -79,15 +83,28 @@ const BtnAddFriend = ({getConversations}) => {
             if (data.error) {
                 throw new Error(data.error);
             }
-           getConversations();
+            // getConversations();
         } catch (error) {
             console.error(error.message)
         } finally {
             setLoading(false);
         }
+
+        try {
+            const res = await fetch(`${APIURL}/api/conversations/get/${authUser._id}`);
+            const data = await res.json();
+            console.log(data);
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            setConversations(data);
+    // Cập nhật conversationsFiltered khi lấy dữ liệu ban đầu
+        } catch (error) {
+            console.log(error.message);
+        } finally {
+            setLoading(false);
+        }
     };
-
-
     const getFoundUser = async () => {
         setLoading(true);
         try {
@@ -160,7 +177,7 @@ const BtnAddFriend = ({getConversations}) => {
                         >
                             Cancel
                         </Button>,
-                        <Link to={'//'}>
+                        
                             <Button
                                 type="primary"
                                 shape="round"
@@ -169,7 +186,7 @@ const BtnAddFriend = ({getConversations}) => {
                                 onClick={() => { addFriend() }}>
                                 Add
                             </Button>
-                        </Link>
+                        
 
                     ]}
                 >

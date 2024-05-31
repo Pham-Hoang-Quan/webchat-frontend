@@ -3,16 +3,14 @@ import MessageContainer from "../../components/messages/MessageContainer";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { Col, FloatButton, Row } from 'antd';
 import {PlusOutlined} from '@ant-design/icons';
-
+import useListenMessages from "../../hooks/useListenMessages";
 import { useResponsiveContext } from '../../context/ResponsiveContext';
 import { Link } from 'react-router-dom';
 
 const Home = () => {
+	useListenMessages();
 	const { showSidebar, setShowSidebar } = useResponsiveContext();
-	useEffect(() => {
-		
-		console.log(showSidebar);
-	});
+	
 	return (
 		<>
 			<Row style={{ height: '100vh' }}>
