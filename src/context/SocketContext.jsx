@@ -16,8 +16,8 @@ export const SocketContextProvider = ({ children }) => {
 	
 	useEffect(() => {
 		if (authUser) {
-			// const socket = io("https://chat-app-yt.onrender.com", {
-			const socket = io("https://webchat-backend-bl39.onrender.com", {
+			const socket = io("http://localhost:4600", {
+			// const socket = io("https://webchat-backend-bl39.onrender.com", {
 				query: {
 					userId: authUser._id,
 				},
