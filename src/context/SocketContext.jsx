@@ -17,6 +17,7 @@ export const SocketContextProvider = ({ children }) => {
 	
 	useEffect(() => {
 		if (authUser) {
+			console.log("Url api: ", APIURL);
 			// const socket = io("http://localhost:4600", {
 			const socket = io(APIURL, {
 				query: {

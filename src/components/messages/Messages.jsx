@@ -18,7 +18,6 @@ const Messages = () => {
 		}, 100);
 	}, [messages]);
 
-
 	return (
 		<Col span={24} className='' style={{ 
 			// backgroundImage: 'url(/image_mo.png)', 
