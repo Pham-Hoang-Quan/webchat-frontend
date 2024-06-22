@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { BsSend } from "react-icons/bs";
 import useSendMessage from "../../hooks/useSendMessage";
-import { MoreOutlined, FileImageOutlined, SendOutlined } from '@ant-design/icons';
-import { FloatButton, Button, Dropdown, Image, Upload, Row, Col } from 'antd';
+import { MoreOutlined, FileImageOutlined, SendOutlined, BulbOutlined } from '@ant-design/icons';
+import { message as mess, Tooltip, Button, Dropdown, Image, Upload, Row, Col } from 'antd';
 import { storage } from "../../firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-
+import { CohereClient } from "cohere-ai";
 const getBase64 = (file) =>
     new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -14,8 +14,6 @@ const getBase64 = (file) =>
         reader.onerror = (error) => reject(error);
     });
 
-
-
 const MessageInput = () => {
     const [message, setMessage] = useState("");
     const { loading, sendMessage } = useSendMessage();
@@ -23,9 +21,54 @@ const MessageInput = () => {
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState('');
     const [fileList, setFileList] = useState([]);
+    const [loadingAI, setLoadingAI] = useState(false);
+    const [messageApi, contextHolder] = mess.useMessage();
+    const success = (mess) => {
+        messageApi.open({
+            type: 'success',
+            content: mess,
+        });
+    };
+    const warning = (mess) => {
+        messageApi.open({
+          type: 'warning',
+          content: mess,
+        });
+      };
+    const cohere = new CohereClient({
+        token: 'RbwbP0Gf2QTNtv5XtmAPL8uki4wp8Ot36uIfB9mL',
+    });
+
+    const handleGenerateMessage = async () => {
+        setLoadingAI(true);
+        if (!message) {
+            warning('Please enter a message');
+            setLoadingAI(false);
+            return;
+        }
+        const promt = "Viết 50 từ về " + message;
+        try {
+            const response = await cohere.chat({
+                message: promt,
+            });
+            // const data = response.body.generations[0].text;
+            console.log(response.text);
+            // Cập nhật nội dung tin nhắn
+            setMessage(message + " AI: '" + response.text + "'");
+        } catch (error) {
+            console.error("Error generating message:", error);
+            // Xử lý lỗi và hiển thị thông báo cho người dùng
+        } finally {
+            setLoadingAI(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!message) return;
+        if (!message) {
+            warning('Please enter a message');
+            return;
+        } 
         await sendMessage(message);
         setMessage("");
     };
@@ -43,6 +86,7 @@ const MessageInput = () => {
         }
     };
     const handleSendImage = async () => {
+        
         try {
             let imageUrl = "img"
             if (file) {
@@ -110,7 +154,7 @@ const MessageInput = () => {
                     onPreview={handlePreview}
                     onChange={handleChange}
                     style={{ width: '100px', height: '30px' }}
-                    beforeUpload={(file) =>handleImageUpload(file)}
+                    beforeUpload={(file) => handleImageUpload(file)}
                 >
                     <Button style={{ width: '100px' }} type="dashed" icon={<FileImageOutlined />}>
                         Image
@@ -140,7 +184,9 @@ const MessageInput = () => {
 
 
     return (
+        
         <Col span={24}>
+            {contextHolder}
             {fileList.length == 0 ? null :
                 <Row style={{ position: 'absolute', bottom: '70px', margin: '20px', padding: '10px', borderRadius: '10px', backgroundColor: '#ffffff' }}>
                     <Upload
@@ -183,20 +229,27 @@ const MessageInput = () => {
                         </Dropdown>
                         <input
                             type='text'
-                            style={{ background: '#F7F8FC', paddingLeft: '30px', color: 'black' }} // Add padding left to avoid overlap with the icon
+                            style={{ background: '#F7F8FC', paddingLeft: '30px', color: 'black', height: '40px' }} // Add padding left to avoid overlap with the icon
                             className='border text-sm rounded-lg block w-full p-2.5 border-gray-300 text-white'
                             placeholder='Send a message'
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
                         />
                     </div>
-                    <button type='button' className='absolute inset-y-0 end-0 flex items-center pe-3'>
-                        <span role='img' aria-label='emoji'>😀</span>
-                    </button>
+                    <Tooltip placement="topLeft" title="Generate message">
+                        <button onClick={() => handleGenerateMessage()} type='button' className='absolute inset-y-0 end-0 flex items-center pe-3 '>
+                            {loadingAI ? <div className='loading loading-spinner'></div> :
+                                // <span role='img' aria-label='emoji'>😀</span>
+                                <BulbOutlined />
+                            }
+                        </button>
+                    </Tooltip>
                 </div>
-                <button type='submit' className='flex items-center justify-center' style={sendButton}>
-                    {loading ? <div className='loading loading-spinner'></div> : <BsSend />}
-                </button>
+                <Tooltip placement="topLeft" title="Send message">
+                    <button type='submit' className='flex items-center justify-center' style={sendButton}>
+                        {loading ? <div className='loading loading-spinner'></div> : <BsSend />}
+                    </button>
+                </Tooltip>
             </form>
         </Col>
     );

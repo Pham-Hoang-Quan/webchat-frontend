@@ -9,14 +9,27 @@ import { BsCameraVideo } from "react-icons/bs";
 import { useAuthContext } from "../../context/AuthContext";
 import { TbLayoutSidebarLeftCollapse } from "react-icons/tb";
 import { IoIosArrowBack } from "react-icons/io";
-import { Col, Row } from 'antd';
+import { Col, Row, Drawer, List, Card, Image } from 'antd';
 import { useResponsiveContext } from '../../context/ResponsiveContext';
-
+import { useParams, useNavigate } from "react-router-dom";
+import { APIURL } from '../../serverConfig';
 const MessageContainer = ({ onBackClick }) => {
     const { selectedConversation, setSelectedConversation } = useConversation();
     const [showArrow, setShowArrow] = useState(window.innerWidth <= 400);
     const { showSidebar, setShowSidebar } = useResponsiveContext();
-
+    const navigate = useNavigate();
+    const [open, setOpen] = useState(false);
+    const [placement, setPlacement] = useState('right');
+    const [imgMessages, setImgMessages] = useState([]);
+    const showDrawer = () => {
+        setOpen(true);
+    };
+    const onClose = () => {
+        setOpen(false);
+    };
+    const onChange = (e) => {
+        setPlacement(e.target.value);
+    };
     useEffect(() => {
         return () => setSelectedConversation(null);
     }, [setSelectedConversation]);
@@ -26,13 +39,36 @@ const MessageContainer = ({ onBackClick }) => {
             setShowArrow(window.innerWidth <= 400);
         };
         window.addEventListener('resize', handleResize);
-
-
         return () => {
             window.removeEventListener('resize', handleResize);
         };
     }, []);
 
+    const handleVideoCallClick = () => {
+        navigate(`/video-call/${selectedConversation._id}`); // Chuyển hướng đến trang VideoCall
+    };
+
+    useEffect(() => {
+        const getParticipants = async () => {
+            try {
+                // const res = await fetch("/api/users"); // Lấy tất cả các user từ database
+                const res = await fetch(`${APIURL}/api/messages/getImageMessage/${selectedConversation._id}`);
+                const data = await res.json();
+                console.log("Image" + data);
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                setImgMessages(data);
+            } catch (error) {
+                console.log(error.message);
+            } finally {
+            }
+        };
+        if (selectedConversation) {
+            getParticipants();
+        }
+
+    }, [selectedConversation]);
 
     return (
         <Row style={{ height: '100vh' }}>
@@ -57,11 +93,13 @@ const MessageContainer = ({ onBackClick }) => {
                                 <span className='text-gray-900 font-bold'>{selectedConversation.name}</span>
                             </Col>
                             <Col className="flex items-center">
-                                <BsCameraVideo className={showArrow ? "w-4 h-4 outline-none mr-5" : "w-6 h-6 outline-none mr-5"} />
+                                <a onClick={handleVideoCallClick}>
+                                    <BsCameraVideo style={{}} className={showArrow ? "w-4 h-4 outline-none mr-5" : "w-6 h-6 outline-none mr-5"} />
+                                </a>
                                 <PiPhoneCall className={showArrow ? "w-4 h-4 outline-none mr-5" : "w-6 h-6 outline-none mr-5"} />
                                 <IoIosSearch className={showArrow ? "w-4 h-4 outline-none" : "w-6 h-6 outline-none"} />
                                 <div className='divider' style={{ borderLeft: '1px solid #DEE1E6', height: 15, marginLeft: '20px' }}></div> {/* Đường line dọc */}
-                                <TbLayoutSidebarLeftCollapse className={showArrow ? "w-4 h-4 outline-none ml-5" : "w-6 h-6 outline-none ml-5"} />
+                                <TbLayoutSidebarLeftCollapse onClick={showDrawer} className={showArrow ? "w-4 h-4 outline-none ml-5" : "w-6 h-6 outline-none ml-5"} />
                             </Col>
                         </Row>
                         <Row>
@@ -73,6 +111,32 @@ const MessageContainer = ({ onBackClick }) => {
                     </Col>
                 </>
             )}
+            <Drawer
+                title="Image Storage"
+                placement={placement}
+                closable={true}
+                onClose={onClose}
+                open={open}
+                key={placement}
+                width={420}
+            >
+                <List
+                    grid={{
+                        gutter: 16,
+                        column: 2,
+                    }}
+                    dataSource={imgMessages}
+                    renderItem={(item) => (
+                        <List.Item>
+                            <Image
+                                width={190}
+                                src={item.message}
+                            />
+                        </List.Item>
+                    )}
+                />
+                
+            </Drawer>
         </Row>
 
         // <div className='flex flex-col' >
@@ -103,46 +167,5 @@ const MessageContainer = ({ onBackClick }) => {
     );
 };
 export default MessageContainer;
-
-
-// const NoChatSelected = () => {
-//  const { authUser } = useAuthContext();
-//  return (
-//      <div className='flex items-center justify-center w-full h-full'>
-//          <div className='px-4 mt-5 text-center sm:text-lg md:text-xl text-gray-300 font-semibold flex flex-col items-center gap-2'>
-//              <p>Welcome 👋 {authUser.fullName} ❄</p>
-//              <p>Select a chat to start messaging</p>
-//              <TiMessages className='text-3xl md:text-6xl text-center' />
-//          </div>
-//      </div>
-//  );
-// };
-
-
-// STARTER CODE SNIPPET
-// import MessageInput from "./MessageInput";
-// import Messages from "./Messages";
-
-
-// const MessageContainer = () => {
-//  return (
-//      <div className='md:min-w-[450px] flex flex-col'>
-//          <>
-//              {/* Header */}
-//              <div className='bg-slate-500 px-4 py-2 mb-2'>
-//                  <span className='label-text'>To:</span> <span className='text-gray-900 font-bold'>John doe</span>
-//              </div>
-
-
-//              <Messages />
-//              <MessageInput />
-//          </>
-//      </div>
-//  );
-// };
-// export default MessageContainer;
-
-
-
 
 
