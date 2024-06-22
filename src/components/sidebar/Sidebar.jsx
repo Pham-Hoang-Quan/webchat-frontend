@@ -8,14 +8,22 @@ import { PlusOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { IoSearchSharp } from "react-icons/io5";
 import { useAuthContext } from "../../context/AuthContext";
-
-const Sidebar = () => {
+import VideoCall from "../callvideo/VideoCall";
+const Sidebar = ({ setShowSidebar, setUser, users }) => {
     const [search, setSearch] = useState("");
     const { authUser } = useAuthContext();
 
     const sidebarStyle = {
         backgroundColor: '#F7F8FC',
         height: '100%',
+    };
+
+    const [showVideoCall, setShowVideoCall] = useState(false);
+    // ...
+
+    const handleStartVideoCall = (conversation) => {
+        setSelectedConversation(conversation);
+        setShowVideoCall(true);
     };
     return (
         <div style={sidebarStyle} className='border-r p-4 flex flex-col overflow-auto'>
@@ -24,6 +32,7 @@ const Sidebar = () => {
                 <LogoutButton />
             </div>
             <Conversations />
+            {showVideoCall && <VideoCall selectedConversation={selectedConversation} closeVideoCall={() => setShowVideoCall(false)} />} {/* Hiển thị VideoCall component */}
         </div>
 
 
