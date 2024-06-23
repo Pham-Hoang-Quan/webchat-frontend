@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BsSend } from "react-icons/bs";
 import useSendMessage from "../../hooks/useSendMessage";
-import { MoreOutlined, FileImageOutlined, SendOutlined, BulbOutlined } from '@ant-design/icons';
-import { message as mess, Tooltip, Button, Dropdown, Image, Upload, Row, Col } from 'antd';
+import { MoreOutlined, FileImageOutlined, SendOutlined, BulbOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { message as mess, Tooltip, Button, Dropdown, Image, Upload, Row, Col, Modal } from 'antd';
 import { storage } from "../../firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { CohereClient } from "cohere-ai";
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { setKey, fromLatLng } from "react-geocode";
+
 const getBase64 = (file) =>
     new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -23,6 +26,57 @@ const MessageInput = () => {
     const [fileList, setFileList] = useState([]);
     const [loadingAI, setLoadingAI] = useState(false);
     const [messageApi, contextHolder] = mess.useMessage();
+
+    //maps
+    const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+    const [selectedLocation, setSelectedLocation] = useState(null);
+    const [currentLocation, setCurrentLocation] = useState({ lat: -34.397, lng: 150.644 });
+
+    useEffect(() => {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                setCurrentLocation({ lat: latitude, lng: longitude });
+                setSelectedLocation({ latitude, longitude });
+            },
+            (error) => {
+                console.error("Error getting current location:", error);
+                message.error('Unable to retrieve current location. Please check your network and enable location services.');
+            },
+            console.log("Current location:", currentLocation)
+        );
+    }, []);
+
+    const handleGetLocation = () => {
+        setIsMapModalOpen(true);
+    };
+
+    const handleMapClick = (event) => {
+        const { latLng } = event;
+        const latitude = latLng.lat();
+        const longitude = latLng.lng();
+        setSelectedLocation({ latitude, longitude });
+    };
+
+    const handleLocationSelect = async () => {
+        if (selectedLocation) {
+            const { latitude, longitude } = selectedLocation;
+            try {
+                setKey("AIzaSyCvaT5cyLq55PU2EFgSv7UTg9mnF-S9mrw");
+                const response = await fromLatLng(latitude, longitude); 
+                const address = response.results[0].formatted_address;
+                const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                await sendMessage(googleMapsLink); 
+                setIsMapModalOpen(false);
+                setSelectedLocation(null);
+            } catch (error) {
+                console.error("Lỗi khi lấy địa chỉ", error);
+                message.error('Kiểm tra kết nối internet của bạn');
+            }
+        }
+    };
+    //end maps
+
     const success = (mess) => {
         messageApi.open({
             type: 'success',
@@ -166,7 +220,7 @@ const MessageInput = () => {
         {
             key: '2',
             label: (
-                <Button style={{ width: '100px' }} type="dashed" icon={<FileImageOutlined />}>
+                <Button style={{ width: '100px' }} type="dashed" icon={<EnvironmentOutlined />} onClick={handleGetLocation}>
                     Location
                 </Button>
             ),
@@ -251,6 +305,32 @@ const MessageInput = () => {
                     </button>
                 </Tooltip>
             </form>
+            <Modal
+                title="Chọn vị trí"
+                visible={isMapModalOpen}
+                onOk={handleLocationSelect}
+                onCancel={() => setIsMapModalOpen(false)}
+                okText="Gửi"
+                cancelText="Hủy"
+            >
+                <LoadScript googleMapsApiKey="AIzaSyBCrF5aGBr8-e1xIgutAaw3qndzJmmNq4s">
+                    <GoogleMap
+                        mapContainerStyle={{ height: "400px", width: "100%" }}
+                        center={currentLocation}
+                        zoom={15} 
+                        onClick={handleMapClick}
+                    >
+                        {selectedLocation && (
+                            <Marker
+                                position={{
+                                    lat: selectedLocation.latitude,
+                                    lng: selectedLocation.longitude,
+                                }}
+                            />
+                        )}
+                    </GoogleMap>
+                </LoadScript>
+            </Modal>
         </Col>
     );
 };
