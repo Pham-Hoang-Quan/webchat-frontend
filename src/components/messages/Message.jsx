@@ -6,11 +6,11 @@ import LinkPreview from "./LinkPreview";
 import Microlink from '@microlink/react';
 import { useState } from 'react';
 import { DownloadOutlined, EllipsisOutlined, CopyOutlined, RollbackOutlined } from '@ant-design/icons';
-import { Dropdown, message, Space, Tooltip } from 'antd';
+import { Dropdown, message, Space, Tooltip, Card  } from 'antd';
 import zIndex from "@mui/material/styles/zIndex";
 import useRecallMessage from "../../hooks/useRecallMessage";
 import { APIURL } from "../../serverConfig";
-
+import { useNavigate } from "react-router-dom";
 
 const Message = ({ message }) => {
 	const { authUser } = useAuthContext();
@@ -23,9 +23,10 @@ const Message = ({ message }) => {
 	const textColor = fromMe ? "text-white" : "text-black";
 	const shakeClass = message.shouldShake ? "shake" : "";
 	const [loading, setLoading] = useState(false);
+	const { Meta } = Card;
 
 	const [showOptions, setShowOptions] = useState(false);
-
+	const navigate = useNavigate();
 	// const { recallMessage, loading } = useRecallMessage();
 	// Handle mouse events to show/hide the download button
 	const handleMouseOver = () => {
@@ -130,9 +131,23 @@ const Message = ({ message }) => {
 					</>
 				) : (
 					message.message.includes("http") ? (
-						<Microlink url={message.message} />
+						message.message.includes("google.com/maps") ? (
+							<a href={message.message} target="blank">
+								<Card
+								hoverable
+								style={{
+									width: 240,
+								}}
+								cover={<img alt="example" src="https://cdn.tgdd.vn/hoi-dap/1337661/Thumbnail/huong-dan-cach-tai-anh-tu-google-maps-bang-chrome-cuc-don.jpg" />}
+							>
+								<Meta title="Vị trí" description="Xem vị trí" />
+							</Card>
+							</a>
+						) : (
+							<Microlink url={message.message} />
+						)
 					) : (
-						message.status=="recall" ? (
+						message.status == "recall" ? (
 							<p color="gray">Tin nhắn đã được thu hồi</p>
 						) : (
 							<p>{message.message}</p>

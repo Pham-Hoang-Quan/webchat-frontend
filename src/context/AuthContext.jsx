@@ -16,10 +16,13 @@ export const AuthContextProvider = ({ children }) => {
 			const getConversations = async () => {
 				const res = await fetch(`${APIURL}/api/conversations/get/${authUser._id}`);
 				const data = await res.json();
+				const sortedConversations = data.sort((a, b) => {
+					return new Date(b.updatedAt) - new Date(a.updatedAt);
+				});
 				if (data.error) {
 					throw new Error(data.error);
 				}
-				setConversations(data);
+				setConversations(sortedConversations);
 			};
 			getConversations();
 		} catch (error) {
